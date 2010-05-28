@@ -11,7 +11,7 @@
         jQuery.fx.step[attr] = function(fx){
             if ( !fx.colorInit ) {
                 fx.start = getColor( fx.elem, attr );
-                fx.end = getRGB( fx.end );
+                fx.end = getRGBA( fx.end );
                 fx.colorInit = true;
             }
 
@@ -19,6 +19,13 @@
                 Math.max(Math.min( parseInt((fx.pos * (fx.end[0] - fx.start[0])) + fx.start[0]), 255), 0),
                 Math.max(Math.min( parseInt((fx.pos * (fx.end[1] - fx.start[1])) + fx.start[1]), 255), 0),
                 Math.max(Math.min( parseInt((fx.pos * (fx.end[2] - fx.start[2])) + fx.start[2]), 255), 0)
+            ].join(",") + ")";
+
+            fx.elem.style[attr] = "rgba(" + [
+                Math.max(Math.min( parseInt((fx.pos * (fx.end[0] - fx.start[0])) + fx.start[0]), 255), 0),
+                Math.max(Math.min( parseInt((fx.pos * (fx.end[1] - fx.start[1])) + fx.start[1]), 255), 0),
+                Math.max(Math.min( parseInt((fx.pos * (fx.end[2] - fx.start[2])) + fx.start[2]), 255), 0),
+                Math.max(Math.min( parseFloat((fx.pos * (fx.end[3] - fx.start[3])) + fx.start[3]), 1), 0)
             ].join(",") + ")";
         }
     });
@@ -28,7 +35,7 @@
     // http://jquery.offput.ca/highlightFade/
 
     // Parse strings looking for color tuples [255,255,255]
-    function getRGB(color) {
+    function getRGBA(color) {
         var result;
 
         // Check if we're already dealing with an array of colors
@@ -37,27 +44,33 @@
 
         // Look for rgb(num,num,num)
         if (result = /rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/.exec(color))
-            return [parseInt(result[1]), parseInt(result[2]), parseInt(result[3])];
+            return [parseInt(result[1]), parseInt(result[2]), parseInt(result[3]), 1];
 
         // Look for rgb(num%,num%,num%)
         if (result = /rgb\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*\)/.exec(color))
-            return [parseFloat(result[1])*2.55, parseFloat(result[2])*2.55, parseFloat(result[3])*2.55];
+            return [parseFloat(result[1])*2.55, parseFloat(result[2])*2.55, parseFloat(result[3])*2.55, 1];
 
         // Look for #a0b1c2
         if (result = /#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/.exec(color))
-            return [parseInt(result[1],16), parseInt(result[2],16), parseInt(result[3],16)];
+            return [parseInt(result[1],16), parseInt(result[2],16), parseInt(result[3],16) ,1];
 
         // Look for #fff
         if (result = /#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/.exec(color))
-            return [parseInt(result[1]+result[1],16), parseInt(result[2]+result[2],16), parseInt(result[3]+result[3],16)];
+            return [parseInt(result[1]+result[1],16), parseInt(result[2]+result[2],16), parseInt(result[3]+result[3],16), 1];
 
         // Look for rgba(0, 0, 0, 0) == transparent in Safari 3
         if (result = /rgba\(0, 0, 0, 0\)/.exec(color))
             return colors['transparent'];
 
+        // Look for rgba(num,num,num,num)
+        if (result = /rgba\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-1]?\.[0-9]{1,6})\s*\)/.exec(color))
+            return [parseInt(result[1]), parseInt(result[2]), parseInt(result[3]), parseFloat(result[4])];
+
         // Otherwise, we're most likely dealing with a named color
         return colors[jQuery.trim(color).toLowerCase()];
     }
+
+window.getRGBA = getRGBA;
 
     function getColor(elem, attr) {
         var color;
@@ -72,7 +85,7 @@
             attr = "backgroundColor";
         } while ( elem = elem.parentNode );
 
-        return getRGB(color);
+        return getRGBA(color);
     };
 
     // Some named colors to work with
